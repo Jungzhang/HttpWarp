@@ -16,7 +16,6 @@ import (
 var (
 	port    int
 	path    string
-	timeout int
 )
 
 var applicationConnMap sync.Map
@@ -24,9 +23,8 @@ var applicationConnMap sync.Map
 func initAll() {
 
 	// init command line args
-	flag.IntVar(&port, "p", 10085, "local proxy port")
+	flag.IntVar(&port, "p", 80, "local proxy port")
 	flag.StringVar(&path, "u", "/data/put", "url path of post data")
-	flag.IntVar(&timeout, "t", 10, "connect client timeout. units are seconds")
 
 	// init log
 	log.SetFlags(log.LstdFlags | log.Lshortfile)
