@@ -3,7 +3,6 @@ package main
 import (
 	"log"
 	"flag"
-	"os"
 	"strconv"
 	"encoding/base64"
 	"net/http"
@@ -169,10 +168,6 @@ func main() {
 
 	initAll()
 	flag.Parse()
-	if port == 0 {
-		flag.Usage()
-		os.Exit(1)
-	}
 
 	http.HandleFunc(path, handleConn)
 	err := http.ListenAndServe(":"+strconv.Itoa(port), nil)
