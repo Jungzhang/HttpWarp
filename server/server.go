@@ -39,7 +39,8 @@ func handleConn(w http.ResponseWriter, r *http.Request) {
 		}
 	}()
 
-	wsSrv, err := websocket.Upgrader{}.Upgrade(w, r, nil)
+	ws := websocket.Upgrader{}
+	wsSrv, err := ws.Upgrade(w, r, nil)
 	if err != nil {
 		log.Print("upgrade websocket failed:", err)
 		return
