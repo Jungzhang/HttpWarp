@@ -75,7 +75,7 @@ func handlerWsConn(done chan string, wsCliConn *websocket.Conn) {
 
 	for ; ; {
 		// 从ws客户端中读取数据
-		wsData := make(map[string]string)
+		wsData := make(map[string]string, 0)
 		err := wsCliConn.ReadJSON(wsData)
 		if err != nil {
 			log.Println("[error] read WSClient failed:", err.Error())

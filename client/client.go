@@ -46,7 +46,7 @@ func handleConn(c net.Conn) {
 	defer c.Close()
 
 	// 建立websocket连接
-	wsUri := fmt.Sprintf("ws://%s:%s%s", domain, appSrvIp, path)
+	wsUri := fmt.Sprintf("ws://%s%s", domain, path)
 	wsCli, _, err := websocket.DefaultDialer.Dial(wsUri, nil)
 	if err != nil {
 		log.Println("[error] dial websocket err:", err)
