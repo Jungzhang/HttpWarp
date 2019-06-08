@@ -1,4 +1,4 @@
-package main
+package client
 
 import (
 	"net"
@@ -22,7 +22,7 @@ var (
 )
 
 // 初始化命令行参数以及log
-func cliInitAll() {
+func initAll() {
 
 	// init command line args
 	flag.StringVar(&appSrvIp, "i", "127.0.0.1", "backend application ip")
@@ -139,9 +139,9 @@ func processWsSrv(done chan string, c net.Conn, wsCli *websocket.Conn) {
 	}
 }
 
-func main() {
+func Start() {
 
-	cliInitAll()
+	initAll()
 	flag.Parse()
 	if domain == "" || appSrvPort == 0 {
 		flag.Usage()

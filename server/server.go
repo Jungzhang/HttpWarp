@@ -1,4 +1,4 @@
-package main
+package server
 
 import (
 	"log"
@@ -18,7 +18,7 @@ var (
 
 var applicationConnMap sync.Map
 
-func serverInitAll() {
+func initAll() {
 
 	// init command line args
 	flag.IntVar(&port, "p", 80, "local proxy port")
@@ -45,7 +45,7 @@ func handleWsCliConn(w http.ResponseWriter, r *http.Request) {
 
 	done := make(chan string)
 	// 处理websocket客户端发过来的数据
-	go handlerWsConn(done, wsSrv)
+	go handlerConn(done, wsSrv)
 
 	for ; ; {
 		select {
@@ -62,7 +62,7 @@ func handleWsCliConn(w http.ResponseWriter, r *http.Request) {
 }
 
 // 处理websocket客户端发过来的数据
-func handlerWsConn(done chan string, wsCliConn *websocket.Conn) {
+func handlerConn(done chan string, wsCliConn *websocket.Conn) {
 	defer func() {
 		if errMsg := recover(); errMsg != nil {
 			log.Println("Recovered in handleAppCliConn, errMsg is ", errMsg)
@@ -158,9 +158,9 @@ func processAppSrvWrite(done chan string, wsCliConn *websocket.Conn, appSrvConn 
 	}
 }
 
-func main() {
+func Start() {
 
-	serverInitAll()
+	initAll()
 	flag.Parse()
 
 	http.HandleFunc(uri, handleWsCliConn)
