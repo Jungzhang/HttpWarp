@@ -121,7 +121,6 @@ func processWsSrv(done chan string, c net.Conn, wsCli *websocket.Conn) {
 			done <- fmt.Sprintf("ws server %s be closed", wsCli.RemoteAddr().String())
 			return
 		}
-		log.Println("wsData:", wsData)
 		// 解析应用的真实数据
 		ret, err := base64.StdEncoding.DecodeString(wsData["data"])
 		if err != nil {
