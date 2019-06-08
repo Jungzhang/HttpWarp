@@ -13,25 +13,25 @@ import (
 
 var (
 	port int
-	path string
+	uri  string
 )
 
 var applicationConnMap sync.Map
 
-func initAll() {
+func serverInitAll() {
 
 	// init command line args
 	flag.IntVar(&port, "p", 80, "local proxy port")
-	flag.StringVar(&path, "u", "/data/put", "url path of post data")
+	flag.StringVar(&uri, "u", "/data/put", "url uri of post data")
 
 	// init log
 	log.SetFlags(log.LstdFlags | log.Lshortfile)
 }
 
-func handleConn(w http.ResponseWriter, r *http.Request) {
+func handleWsCliConn(w http.ResponseWriter, r *http.Request) {
 	defer func() {
 		if errMsg := recover(); errMsg != nil {
-			log.Println("Recovered in handleConn, errMsg is ", errMsg)
+			log.Println("Recovered in handleAppCliConn, errMsg is ", errMsg)
 		}
 	}()
 
@@ -65,7 +65,7 @@ func handleConn(w http.ResponseWriter, r *http.Request) {
 func handlerWsConn(done chan string, wsCliConn *websocket.Conn) {
 	defer func() {
 		if errMsg := recover(); errMsg != nil {
-			log.Println("Recovered in handleConn, errMsg is ", errMsg)
+			log.Println("Recovered in handleAppCliConn, errMsg is ", errMsg)
 		}
 	}()
 
@@ -134,7 +134,7 @@ func connectAppSrv(ip, port string, wsCliConn *websocket.Conn) (net.Conn, error)
 func processAppSrvWrite(done chan string, wsCliConn *websocket.Conn, appSrvConn net.Conn) {
 	defer func() {
 		if errMsg := recover(); errMsg != nil {
-			log.Println("Recovered in handleConn, errMsg is ", errMsg)
+			log.Println("Recovered in handleAppCliConn, errMsg is ", errMsg)
 		}
 	}()
 	defer appSrvConn.Close()
@@ -160,10 +160,10 @@ func processAppSrvWrite(done chan string, wsCliConn *websocket.Conn, appSrvConn 
 
 func main() {
 
-	initAll()
+	serverInitAll()
 	flag.Parse()
 
-	http.HandleFunc(path, handleConn)
+	http.HandleFunc(uri, handleWsCliConn)
 	err := http.ListenAndServe(":"+strconv.Itoa(port), nil)
 	if err != nil {
 		log.Fatalf("[fatalf] start http server failed, " + err.Error())

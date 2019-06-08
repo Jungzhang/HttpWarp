@@ -22,14 +22,14 @@ var (
 )
 
 // 初始化命令行参数以及log
-func initAll() {
+func cliInitAll() {
 
 	// init command line args
 	flag.StringVar(&appSrvIp, "i", "127.0.0.1", "backend application ip")
 	flag.IntVar(&appSrvPort, "P", 0, "backend application port (must input)")
 	flag.IntVar(&localPort, "p", 10086, "local proxy port")
 	flag.StringVar(&domain, "d", "", "domain name (must input)")
-	flag.StringVar(&path, "u", "/data/put", "url path of post data")
+	flag.StringVar(&path, "u", "/data/put", "url uri of post data")
 	flag.IntVar(&timeout, "t", 10, "connect domain timeout. units are seconds")
 
 	// init log
@@ -37,10 +37,10 @@ func initAll() {
 }
 
 // 连接处理
-func handleConn(c net.Conn) {
+func handleAppCliConn(c net.Conn) {
 	defer func() {
 		if errMsg := recover(); errMsg != nil {
-			log.Println("Recovered in handleConn, errMsg is ", errMsg)
+			log.Println("Recovered in handleAppCliConn, errMsg is ", errMsg)
 		}
 	}()
 	defer c.Close()
@@ -72,7 +72,7 @@ func handleConn(c net.Conn) {
 func processAppCli(done chan string, c net.Conn, wsCli *websocket.Conn) {
 	defer func() {
 		if errMsg := recover(); errMsg != nil {
-			log.Println("Recovered in handleConn, errMsg is ", errMsg)
+			log.Println("Recovered in handleAppCliConn, errMsg is ", errMsg)
 		}
 	}()
 
@@ -108,7 +108,7 @@ func processAppCli(done chan string, c net.Conn, wsCli *websocket.Conn) {
 func processWsSrv(done chan string, c net.Conn, wsCli *websocket.Conn) {
 	defer func() {
 		if errMsg := recover(); errMsg != nil {
-			log.Println("Recovered in handleConn, errMsg is ", errMsg)
+			log.Println("Recovered in handleAppCliConn, errMsg is ", errMsg)
 		}
 	}()
 
@@ -141,7 +141,7 @@ func processWsSrv(done chan string, c net.Conn, wsCli *websocket.Conn) {
 
 func main() {
 
-	initAll()
+	cliInitAll()
 	flag.Parse()
 	if domain == "" || appSrvPort == 0 {
 		flag.Usage()
@@ -161,6 +161,6 @@ func main() {
 			log.Println("accept error:", err)
 			continue
 		}
-		go handleConn(c)
+		go handleAppCliConn(c)
 	}
 }
