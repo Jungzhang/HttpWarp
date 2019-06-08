@@ -11,7 +11,6 @@ import (
 	"sync"
 	"github.com/gorilla/websocket"
 	"bufio"
-	"io"
 )
 
 var (
@@ -78,11 +77,8 @@ func handlerWsConn(done chan string, wsCliConn *websocket.Conn) {
 		err := wsCliConn.ReadJSON(&wsData)
 		if err != nil {
 			log.Println("[error] read data from WSClient failed, ", err.Error())
-			if err == io.ErrUnexpectedEOF || err == io.EOF {
-				done <- fmt.Sprintf("Wsclient %s be closed", wsCliConn.RemoteAddr().String())
-				return
-			}
-			continue
+			done <- fmt.Sprintf("Wsclient %s be closed", wsCliConn.RemoteAddr().String())
+			return
 		}
 
 		log.Printf("[debug] wsData:%#v", wsData)

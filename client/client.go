@@ -94,10 +94,8 @@ func processAppCli(done chan string, c net.Conn, wsCli *websocket.Conn) {
 		err := wsCli.WriteJSON(payload)
 		if err != nil {
 			log.Println("[error] send data to WSServer failed, ", err.Error())
-			if err == io.EOF || err == io.ErrUnexpectedEOF || err == io.ErrClosedPipe {
-				done <- fmt.Sprintf("ws server %s be closed", wsCli.RemoteAddr().String())
-				return
-			}
+			done <- fmt.Sprintf("ws server %s be closed", wsCli.RemoteAddr().String())
+			return
 		}
 	}
 
@@ -117,11 +115,8 @@ func processWsSrv(done chan string, c net.Conn, wsCli *websocket.Conn) {
 		err := wsCli.ReadJSON(&wsData)
 		if err != nil {
 			log.Println("[error] read data from WSServer failed, ", err.Error())
-			if err == io.ErrUnexpectedEOF || err == io.EOF || err == io.ErrClosedPipe {
-				done <- fmt.Sprintf("ws server %s be closed", wsCli.RemoteAddr().String())
-				return
-			}
-			continue
+			done <- fmt.Sprintf("ws server %s be closed", wsCli.RemoteAddr().String())
+			return
 		}
 		log.Println("wsData:", wsData)
 		// 解析应用的真实数据
