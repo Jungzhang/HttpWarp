@@ -153,9 +153,11 @@ func processAppSrvWrite(done chan string, wsCliConn *websocket.Conn, appSrvConn 
 	for input.Scan() {
 		// 从应用服务端读取数据
 		appSrvData := input.Bytes()
-		resp := base64.StdEncoding.EncodeToString(appSrvData)
+		appResp := base64.StdEncoding.EncodeToString(appSrvData)
+		wsResp := map[string]string{"data": appResp}
+		log.Printf("[debug] wsResp:%#v\n", wsResp)
 		// 发送给ws client
-		if err := wsCliConn.WriteJSON(map[string]string{"data": resp}); err != nil {
+		if err := wsCliConn.WriteJSON(wsResp); err != nil {
 			log.Println("[error] send application server data to WsClient failed:", err.Error())
 			done <- fmt.Sprintf("Wsclient %s be closed", wsCliConn.RemoteAddr().String())
 			return

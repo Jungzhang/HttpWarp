@@ -26,7 +26,7 @@ var (
 func initAll() {
 
 	// init command line args
-	flag.StringVar(&appSrvIp, "i", "0.0.0.0", "backend application ip")
+	flag.StringVar(&appSrvIp, "i", "127.0.0.1", "backend application ip")
 	flag.IntVar(&appSrvPort, "P", 0, "backend application port (must input)")
 	flag.IntVar(&localPort, "p", 10086, "local proxy port")
 	flag.StringVar(&domain, "d", "", "domain name (must input)")
