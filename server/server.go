@@ -10,6 +10,7 @@ import (
 	"net"
 	"sync"
 	"github.com/gorilla/websocket"
+	"bufio"
 )
 
 var (
@@ -82,6 +83,8 @@ func handlerWsConn(done chan string, wsCliConn *websocket.Conn) {
 			return
 		}
 
+		log.Printf("[info] wsData:%#v", wsData)
+
 		// 解析应用的数据
 		appData, err := base64.StdEncoding.DecodeString(wsData["data"])
 		if err != nil {
@@ -145,15 +148,11 @@ func processAppSrvWrite(done chan string, wsCliConn *websocket.Conn, appSrvConn 
 	}()
 	defer appSrvConn.Close()
 
+	input := bufio.NewScanner(appSrvConn)
 	// 获取该ws client对应的应用服务端连接
-	for ; ; {
+	for input.Scan() {
 		// 从应用服务端读取数据
-		appSrvData := make([]byte, 0)
-		_, err := appSrvConn.Read(appSrvData)
-		if err != nil {
-			log.Println("[error] read application server failed:", err.Error())
-			return
-		}
+		appSrvData := input.Bytes()
 		resp := base64.StdEncoding.EncodeToString(appSrvData)
 		// 发送给ws client
 		if err := wsCliConn.WriteJSON(map[string]string{"data": resp}); err != nil {

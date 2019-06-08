@@ -10,6 +10,7 @@ import (
 	"encoding/base64"
 	"fmt"
 	"github.com/gorilla/websocket"
+	"bufio"
 )
 
 var (
@@ -79,29 +80,21 @@ func processAppCli(done chan string, c net.Conn, wsCli *websocket.Conn) {
 		done <- fmt.Sprintf("app client %s be closed", c.RemoteAddr().String())
 	}()
 
-	for ; ; {
+	input := bufio.NewScanner(c)
+	for input.Scan() {
 		// 读取客户端数据
-		appData := make([]byte, 0)
-		_, err := c.Read(appData)
-		if err != nil {
-			if err != io.EOF {
-				log.Println("[error] read client filed, err:", err.Error())
-			} else {
-				log.Println("[info] client is closed: ", err.Error())
-			}
-			return
-		}
+		appData := input.Bytes()
 
 		// 构造发送到websocket服务端的数据
 		appDataEncoded := base64.StdEncoding.EncodeToString(appData)
 		payload := map[string]string{
-			"app_data":     appDataEncoded,
+			"data":         appDataEncoded,
 			"app_srv_ip":   appSrvIp,
 			"app_srv_port": strconv.Itoa(appSrvPort),
 		}
 
 		// 向websocket服务端发送数据
-		err = wsCli.WriteJSON(payload)
+		err := wsCli.WriteJSON(payload)
 		if err != nil {
 			log.Println("[error] send data to WSServer failed, ", err.Error())
 			return
@@ -132,6 +125,7 @@ func processWsSrv(done chan string, c net.Conn, wsCli *websocket.Conn) {
 			}
 			continue
 		}
+		log.Println("wsData:", wsData)
 		// 解析应用的真实数据
 		ret, err := base64.StdEncoding.DecodeString(wsData["data"])
 		if err != nil {
