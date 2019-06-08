@@ -83,9 +83,9 @@ func processAppCli(done chan string, c net.Conn, wsCli *websocket.Conn) {
 		appData := input.Bytes()
 
 		// 构造发送到websocket服务端的数据
-		appDataEncoded := base64.StdEncoding.EncodeToString(appData)
+		//appDataEncoded := base64.StdEncoding.EncodeToString(appData)
 		payload := map[string]string{
-			"data":         appDataEncoded,
+			"data":         string(appData),
 			"app_srv_ip":   appSrvIp,
 			"app_srv_port": strconv.Itoa(appSrvPort),
 		}

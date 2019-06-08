@@ -84,11 +84,13 @@ func handlerWsConn(done chan string, wsCliConn *websocket.Conn) {
 		log.Printf("[debug] wsData:%#v", wsData)
 
 		// 解析应用的数据
-		appData, err := base64.StdEncoding.DecodeString(wsData["data"])
-		if err != nil {
-			log.Println("decode application client data failed:", err.Error())
-			continue
-		}
+		//appData, err := base64.StdEncoding.DecodeString(wsData["data"])
+		//if err != nil {
+		//	log.Println("decode application client data failed:", err.Error())
+		//	continue
+		//}
+
+		appData := []byte(wsData["data"])
 
 		// 将数据发送给应用服务端
 		if appSrvConn, ok := applicationConnMap.Load(wsCliConn); ok {
