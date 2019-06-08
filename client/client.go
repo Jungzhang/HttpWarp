@@ -76,9 +76,6 @@ func processAppCli(done chan string, c net.Conn, wsCli *websocket.Conn) {
 			log.Println("Recovered in handleConn, errMsg is ", errMsg)
 		}
 	}()
-	defer func() {
-		done <- fmt.Sprintf("app client %s be closed", c.RemoteAddr().String())
-	}()
 
 	input := bufio.NewScanner(c)
 	for input.Scan() {
@@ -97,9 +94,14 @@ func processAppCli(done chan string, c net.Conn, wsCli *websocket.Conn) {
 		err := wsCli.WriteJSON(payload)
 		if err != nil {
 			log.Println("[error] send data to WSServer failed, ", err.Error())
-			return
+			if err == io.EOF || err == io.ErrUnexpectedEOF || err == io.ErrClosedPipe {
+				done <- fmt.Sprintf("ws server %s be closed", wsCli.RemoteAddr().String())
+				return
+			}
 		}
 	}
+
+	done <- fmt.Sprintf("app client %s be closed", wsCli.RemoteAddr().String())
 }
 
 func processWsSrv(done chan string, c net.Conn, wsCli *websocket.Conn) {
@@ -108,20 +110,16 @@ func processWsSrv(done chan string, c net.Conn, wsCli *websocket.Conn) {
 			log.Println("Recovered in handleConn, errMsg is ", errMsg)
 		}
 	}()
-	defer func() {
-		done <- fmt.Sprintf("app client %s be closed", c.RemoteAddr().String())
-	}()
 
 	for ; ; {
 		// 从websocket服务端读取数据
 		wsData := make(map[string]string)
 		err := wsCli.ReadJSON(&wsData)
 		if err != nil {
-			if err == io.ErrUnexpectedEOF {
-				log.Println("[info] read data from WSServer failed, ", err.Error())
+			log.Println("[error] read data from WSServer failed, ", err.Error())
+			if err == io.ErrUnexpectedEOF || err == io.EOF || err == io.ErrClosedPipe {
+				done <- fmt.Sprintf("ws server %s be closed", wsCli.RemoteAddr().String())
 				return
-			} else {
-				log.Println("[error] read data from WSServer failed, ", err.Error())
 			}
 			continue
 		}
@@ -135,11 +133,11 @@ func processWsSrv(done chan string, c net.Conn, wsCli *websocket.Conn) {
 		// 发送给应用客户端
 		_, err = c.Write(ret)
 		if err != nil {
-			if err == io.ErrUnexpectedEOF || err == io.EOF {
-				log.Println("[info] write data to app client failed, ", err.Error())
+			log.Println("[error] write data to application client failed, ", err.Error())
+			if err == io.ErrUnexpectedEOF || err == io.EOF || err == io.ErrClosedPipe {
+				done <- fmt.Sprintf("app client %s be closed", wsCli.RemoteAddr().String())
 				return
 			}
-			log.Println("[error] write data to application client failed, ", err.Error())
 		}
 	}
 }

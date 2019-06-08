@@ -11,6 +11,7 @@ import (
 	"sync"
 	"github.com/gorilla/websocket"
 	"bufio"
+	"io"
 )
 
 var (
@@ -70,25 +71,27 @@ func handlerWsConn(done chan string, wsCliConn *websocket.Conn) {
 			log.Println("Recovered in handleConn, errMsg is ", errMsg)
 		}
 	}()
-	defer func() {
-		done <- fmt.Sprintf("Wsclient %s be closed", wsCliConn.RemoteAddr().String())
-	}()
 
 	for ; ; {
 		// 从ws客户端中读取数据
 		wsData := make(map[string]string, 0)
 		err := wsCliConn.ReadJSON(&wsData)
 		if err != nil {
-			log.Println("[error] read WSClient failed:", err.Error())
-			return
+			log.Println("[error] read data from WSClient failed, ", err.Error())
+			if err == io.ErrUnexpectedEOF || err == io.EOF {
+				done <- fmt.Sprintf("Wsclient %s be closed", wsCliConn.RemoteAddr().String())
+				return
+			}
+			continue
 		}
 
-		log.Printf("[info] wsData:%#v", wsData)
+		log.Printf("[debug] wsData:%#v", wsData)
 
 		// 解析应用的数据
 		appData, err := base64.StdEncoding.DecodeString(wsData["data"])
 		if err != nil {
 			log.Println("decode application client data failed:", err.Error())
+			continue
 		}
 
 		// 将数据发送给应用服务端
@@ -104,9 +107,10 @@ func handlerWsConn(done chan string, wsCliConn *websocket.Conn) {
 		}
 
 		// 建立连接
-		appSrvConn, err := connectAndSend(wsData["app_srv_ip"], wsData["app_srv_port"], wsCliConn)
+		appSrvConn, err := connectAppSrv(wsData["app_srv_ip"], wsData["app_srv_port"], wsCliConn)
 		if err != nil {
-			log.Println("[error] connectAndSend:", err.Error())
+			log.Println("[error] connectAppSrv:", err.Error())
+			done <- fmt.Sprintf("connect app srv failed.")
 			return
 		}
 		go processAppSrvWrite(done, wsCliConn, appSrvConn)
@@ -120,7 +124,7 @@ func handlerWsConn(done chan string, wsCliConn *websocket.Conn) {
 }
 
 // connect and send data to application server
-func connectAndSend(ip, port string, wsCliConn *websocket.Conn) (net.Conn, error) {
+func connectAppSrv(ip, port string, wsCliConn *websocket.Conn) (net.Conn, error) {
 
 	// 幂等操作, 如果之前连接存在过则无脑关闭一次
 	if srvConn, ok := applicationConnMap.Load(wsCliConn); ok {
