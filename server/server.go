@@ -4,13 +4,11 @@ import (
 	"log"
 	"flag"
 	"strconv"
-	"encoding/base64"
 	"net/http"
 	"fmt"
 	"net"
 	"sync"
 	"github.com/gorilla/websocket"
-	"bufio"
 )
 
 var (
@@ -73,7 +71,7 @@ func handlerWsConn(done chan string, wsCliConn *websocket.Conn) {
 
 	for ; ; {
 		// 从ws客户端中读取数据
-		wsData := make(map[string]string, 0)
+		wsData := make(map[string][]byte, 0)
 		err := wsCliConn.ReadJSON(&wsData)
 		if err != nil {
 			log.Println("[error] read data from WSClient failed, ", err.Error())
@@ -81,16 +79,7 @@ func handlerWsConn(done chan string, wsCliConn *websocket.Conn) {
 			return
 		}
 
-		log.Printf("[debug] wsData:%#v", wsData)
-
-		// 解析应用的数据
-		//appData, err := base64.StdEncoding.DecodeString(wsData["data"])
-		//if err != nil {
-		//	log.Println("decode application client data failed:", err.Error())
-		//	continue
-		//}
-
-		appData := []byte(wsData["data"])
+		appData := wsData["data"]
 
 		// 将数据发送给应用服务端
 		if appSrvConn, ok := applicationConnMap.Load(wsCliConn); ok {
@@ -105,7 +94,7 @@ func handlerWsConn(done chan string, wsCliConn *websocket.Conn) {
 		}
 
 		// 建立连接
-		appSrvConn, err := connectAppSrv(wsData["app_srv_ip"], wsData["app_srv_port"], wsCliConn)
+		appSrvConn, err := connectAppSrv(string(wsData["app_srv_ip"]), string(wsData["app_srv_port"]), wsCliConn)
 		if err != nil {
 			log.Println("[error] connectAppSrv:", err.Error())
 			done <- fmt.Sprintf("connect app srv failed.")
@@ -150,14 +139,16 @@ func processAppSrvWrite(done chan string, wsCliConn *websocket.Conn, appSrvConn 
 	}()
 	defer appSrvConn.Close()
 
-	input := bufio.NewScanner(appSrvConn)
 	// 获取该ws client对应的应用服务端连接
-	for input.Scan() {
+	for ; ; {
 		// 从应用服务端读取数据
-		appSrvData := input.Bytes()
-		appResp := base64.StdEncoding.EncodeToString(appSrvData)
-		wsResp := map[string]string{"data": appResp}
-		log.Printf("[debug] wsResp:%#v\n", wsResp)
+		appSrvData := make([]byte, 40960)
+		n, err := appSrvConn.Read(appSrvData)
+		if err != nil {
+			log.Println("[error] read application server data failed:", err.Error())
+			return
+		}
+		wsResp := map[string][]byte{"data": appSrvData[0:n]}
 		// 发送给ws client
 		if err := wsCliConn.WriteJSON(wsResp); err != nil {
 			log.Println("[error] send application server data to WsClient failed:", err.Error())
