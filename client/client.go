@@ -124,18 +124,27 @@ func processWsSrv(done chan string, c net.Conn, wsCli *websocket.Conn) {
 		wsData := make(map[string]string)
 		err := wsCli.ReadJSON(&wsData)
 		if err != nil {
-			log.Println("[error] read data from WSServer failed, ", err.Error())
-			return
+			if err == io.ErrUnexpectedEOF {
+				log.Println("[info] read data from WSServer failed, ", err.Error())
+				return
+			} else {
+				log.Println("[error] read data from WSServer failed, ", err.Error())
+			}
+			continue
 		}
 		// 解析应用的真实数据
 		ret, err := base64.StdEncoding.DecodeString(wsData["data"])
 		if err != nil {
 			log.Printf("[error] decode application server data failed, %s\n", err.Error())
-			return
+			continue
 		}
 		// 发送给应用客户端
 		_, err = c.Write(ret)
 		if err != nil {
+			if err == io.ErrUnexpectedEOF || err == io.EOF {
+				log.Println("[info] write data to app client failed, ", err.Error())
+				return
+			}
 			log.Println("[error] write data to application client failed, ", err.Error())
 		}
 	}

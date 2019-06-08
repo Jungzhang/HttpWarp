@@ -13,8 +13,8 @@ import (
 )
 
 var (
-	port    int
-	path    string
+	port int
+	path string
 )
 
 var applicationConnMap sync.Map
@@ -76,7 +76,7 @@ func handlerWsConn(done chan string, wsCliConn *websocket.Conn) {
 	for ; ; {
 		// 从ws客户端中读取数据
 		wsData := make(map[string]string, 0)
-		err := wsCliConn.ReadJSON(wsData)
+		err := wsCliConn.ReadJSON(&wsData)
 		if err != nil {
 			log.Println("[error] read WSClient failed:", err.Error())
 			return
@@ -156,7 +156,7 @@ func processAppSrvWrite(done chan string, wsCliConn *websocket.Conn, appSrvConn 
 		}
 		resp := base64.StdEncoding.EncodeToString(appSrvData)
 		// 发送给ws client
-		if err := wsCliConn.WriteJSON(resp); err != nil {
+		if err := wsCliConn.WriteJSON(map[string]string{"data": resp}); err != nil {
 			log.Println("[error] send application server data to WsClient failed:", err.Error())
 			done <- fmt.Sprintf("Wsclient %s be closed", wsCliConn.RemoteAddr().String())
 			return
