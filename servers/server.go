@@ -57,6 +57,7 @@ func handleWsCliConn(w http.ResponseWriter, r *http.Request) {
 				applicationConnMap.Delete(wsSrv)
 			}
 			log.Println("[info] ", doneMsg)
+			return
 		}
 	}
 }
