@@ -37,7 +37,9 @@ cd $GOPATH/src/github.com/Jungzhang/HttpWarp
 编译Server端：go build -o server
 编译Client端：go build -o client
 ```
-> 注意：当部署ws服务端时可执行文件名称必须为`server`，在windows环境下编译时记得在client/server后添加.exe，即：go build -o client.exe 
+> 注意：
+>- 当部署ws服务端时可执行文件名称必须为`server`
+>- 在windows环境下编译时记得在client/server后添加.exe，即：go build -o client.exe 
 
 部署服务端
 
