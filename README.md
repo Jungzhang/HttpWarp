@@ -34,11 +34,12 @@ go get -u github.com/Jungzhang/HttpWarp
 
 ```
 cd $GOPATH/src/github.com/Jungzhang/HttpWarp
-go build -o server 或 go build -o client
+编译Server端：go build -o server
+编译Client端：go build -o client
 ```
-> 注意：当部署ws服务端时可执行文件名称必须为`server`
+> 注意：当部署ws服务端时可执行文件名称必须为`server`，在windows环境下编译时记得在client/server后添加.exe，即：go build -o client.exe 
 
-启动服务端
+部署服务端
 
 ```
 ./server [-p 8080] [-u /images/upload]
@@ -59,7 +60,7 @@ go build -o server 或 go build -o client
 >- p：需要转发到的`TCP服务端`的服务端口，即ws服务端代理的后端TCP服务端口。该选项必选
 >- d：ws服务端所在域名或ip地址。该选项必选
 >- i：TCP服务端对应地址，默认为`127.0.0.1`
->- l：ws客户端监听的本地代理端口，默认为`10086`
+>- l（小写L）：ws客户端监听的本地代理端口，默认为`10086`
 >- u：用于ws客户端和ws服务端之间传输数据的url地址，默认为`/data/put`。注意该地址必须和ws服务端地址保持一致。
 
 TCP客服端配置
